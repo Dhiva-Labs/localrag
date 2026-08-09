@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import importlib.resources
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 
 from localrag.config import Settings
 from localrag.core.embedder import Embedder
@@ -21,6 +24,14 @@ class Deps:
     store: Store
     embedder: Any
     ollama: Any
+
+
+@lru_cache(maxsize=1)
+def _load_index_html() -> str:
+    # cached at process startup (first access): the packaged UI is static,
+    # so there is nothing to gain from re-reading it on every request.
+    path = importlib.resources.files("localrag") / "ui" / "index.html"
+    return path.read_text(encoding="utf-8")
 
 
 def create_app(
@@ -51,6 +62,10 @@ def create_app(
         yield
 
     app = FastAPI(lifespan=lifespan)
+
+    @app.get("/", response_class=HTMLResponse)
+    async def index() -> str:
+        return _load_index_html()
 
     from localrag.api.ingest import router as ingest_router
     from localrag.api.query import router as query_router

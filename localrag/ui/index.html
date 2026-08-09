@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LocalRAG</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236d8dfb'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0d0f13;
+    --bg-elevated: #15181e;
+    --bg-hover: #1b1f27;
+    --bg-input: #11141a;
+    --border: #262b35;
+    --border-soft: #1c2027;
+    --text: #e6e8ec;
+    --text-muted: #8b8f9c;
+    --text-faint: #5c6270;
+    --accent: #6d8dfb;
+    --accent-hover: #86a1ff;
+    --accent-soft: rgba(109, 141, 251, 0.14);
+    --success: #3ecf8e;
+    --danger: #f2565f;
+    --danger-soft: rgba(242, 86, 95, 0.14);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    overflow: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 8px;
+    border: 2px solid var(--bg);
+  }
+  * { scrollbar-color: var(--border) transparent; scrollbar-width: thin; }
+
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* ---------- header ---------- */
+
+  .app-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elevated);
+  }
+
+  .brand {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  .brand-accent { color: var(--accent); }
+
+  .health {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .health-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    box-shadow: 0 0 0 3px transparent;
+    transition: background-color 200ms ease, box-shadow 200ms ease;
+  }
+
+  .health-dot.is-ok {
+    background: var(--success);
+    box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.15);
+  }
+
+  .health-dot.is-bad {
+    background: var(--danger);
+    box-shadow: 0 0 0 3px rgba(242, 86, 95, 0.15);
+  }
+
+  /* ---------- banner ---------- */
+
+  .banner {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 24px;
+    background: var(--danger-soft);
+    border-bottom: 1px solid rgba(242, 86, 95, 0.35);
+    color: #ffd3d6;
+    font-size: 13.5px;
+  }
+
+  .banner[hidden] { display: none; }
+
+  .banner-icon { flex: 0 0 auto; }
+
+  .banner-text { flex: 1 1 auto; }
+
+  .banner-dismiss {
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    opacity: 0.75;
+  }
+
+  .banner-dismiss:hover { opacity: 1; background: rgba(255, 255, 255, 0.08); }
+
+  /* ---------- layout ---------- */
+
+  .layout {
+    flex: 1 1 auto;
+    display: flex;
+    min-height: 0;
+  }
+
+  .sidebar {
+    flex: 0 0 300px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 20px;
+    border-right: 1px solid var(--border);
+    background: var(--bg-elevated);
+    gap: 16px;
+  }
+
+  /* ---------- upload zone ---------- */
+
+  .upload-zone {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 22px 16px;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+  }
+
+  .upload-zone:hover,
+  .upload-zone:focus-visible {
+    border-color: var(--accent);
+    color: var(--text);
+    outline: none;
+  }
+
+  .upload-zone.is-active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+  }
+
+  .upload-icon {
+    font-size: 20px;
+    color: var(--accent);
+  }
+
+  .upload-text {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .upload-hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-faint);
+    letter-spacing: 0.4px;
+  }
+
+  .upload-error {
+    flex: 0 0 auto;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--danger-soft);
+    color: #ffd3d6;
+    font-size: 12.5px;
+  }
+
+  .upload-error[hidden] { display: none; }
+
+  /* ---------- doc list ---------- */
+
+  .doc-list-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-top: 4px;
+  }
+
+  .doc-list-header h2 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-faint);
+  }
+
+  .doc-count {
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  .doc-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .doc-empty {
+    padding: 10px 2px;
+    color: var(--text-faint);
+    font-size: 13px;
+  }
+
+  .doc-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 10px;
+    border-radius: var(--radius-md);
+    background: var(--bg-input);
+    border: 1px solid var(--border-soft);
+    transition: border-color 150ms ease;
+  }
+
+  .doc-item:hover { border-color: var(--border); }
+
+  .doc-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .doc-name {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .doc-meta {
+    font-size: 11.5px;
+    color: var(--text-faint);
+  }
+
+  .doc-delete {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 150ms ease;
+  }
+
+  .doc-delete:hover {
+    color: var(--danger);
+    border-color: rgba(242, 86, 95, 0.4);
+    background: var(--danger-soft);
+  }
+
+  .doc-delete.is-confirming {
+    width: auto;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--danger);
+    border-color: rgba(242, 86, 95, 0.5);
+    background: var(--danger-soft);
+  }
+
+  /* ---------- chat panel ---------- */
+
+  .chat-panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .chat-log {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 28px 10%;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .empty-state {
+    margin: auto;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 14px;
+    max-width: 320px;
+  }
+
+  .msg {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 78%;
+  }
+
+  .msg-user {
+    align-self: flex-end;
+    align-items: flex-end;
+  }
+
+  .msg-answer {
+    align-self: flex-start;
+    align-items: flex-start;
+  }
+
+  .msg-bubble {
+    padding: 12px 15px;
+    border-radius: var(--radius-lg);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 14.5px;
+  }
+
+  .msg-user .msg-bubble {
+    background: var(--accent);
+    color: #0b0e14;
+    font-weight: 500;
+    border-bottom-right-radius: 4px;
+  }
+
+  .msg-answer .msg-bubble {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-soft);
+    border-bottom-left-radius: 4px;
+    min-width: 2.5em;
+  }
+
+  .msg-answer .msg-bubble:empty::after {
+    content: "…";
+    color: var(--text-faint);
+  }
+
+  .citations {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .citation-chip {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 11.5px;
+    cursor: default;
+  }
+
+  .inline-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--danger-soft);
+    color: #ffd3d6;
+    font-size: 12.5px;
+  }
+
+  /* ---------- composer ---------- */
+
+  .composer {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 16px 10%;
+    border-top: 1px solid var(--border);
+    background: var(--bg-elevated);
+  }
+
+  #questionInput {
+    flex: 1 1 auto;
+    resize: none;
+    max-height: 160px;
+    padding: 11px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text);
+    font: inherit;
+    font-size: 14.5px;
+    line-height: 1.4;
+  }
+
+  #questionInput:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  #questionInput:disabled { opacity: 0.6; }
+
+  #sendButton {
+    flex: 0 0 auto;
+    padding: 11px 20px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: var(--accent);
+    color: #0b0e14;
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: background-color 150ms ease, opacity 150ms ease;
+  }
+
+  #sendButton:hover:not(:disabled) { background: var(--accent-hover); }
+
+  #sendButton:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /* ---------- footer ---------- */
+
+  .app-footer {
+    flex: 0 0 auto;
+    padding: 8px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-faint);
+    font-size: 11.5px;
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+  }
+
+  @media (max-width: 760px) {
+    .layout { flex-direction: column; }
+    .sidebar {
+      flex: 0 0 auto;
+      max-height: 40vh;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .chat-log, .composer { padding-left: 5%; padding-right: 5%; }
+    .msg { max-width: 92%; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="app-header">
+    <h1 class="brand">Local<span class="brand-accent">RAG</span></h1>
+    <div class="health" id="health" aria-live="polite">
+      <span class="health-dot" id="healthDot" aria-hidden="true"></span>
+      <span id="healthLabel">connecting&hellip;</span>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" role="alert" hidden>
+    <span class="banner-icon" aria-hidden="true">&#9888;</span>
+    <span class="banner-text" id="bannerText"></span>
+    <button type="button" class="banner-dismiss" id="bannerDismiss" aria-label="Dismiss">&times;</button>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <section class="upload-zone" id="uploadZone" tabindex="0" role="button"
+                aria-label="Upload documents">
+        <input type="file" id="fileInput" multiple accept=".pdf,.txt,.md" hidden>
+        <div class="upload-icon" aria-hidden="true">&uarr;</div>
+        <p class="upload-text">Drop files or click to browse</p>
+        <p class="upload-hint">PDF &middot; TXT &middot; MD</p>
+      </section>
+      <div class="upload-error" id="uploadError" role="alert" hidden></div>
+
+      <div class="doc-list-header">
+        <h2>Documents</h2>
+        <span class="doc-count" id="docCount"></span>
+      </div>
+      <ul class="doc-list" id="docList"></ul>
+    </aside>
+
+    <main class="chat-panel">
+      <div class="chat-log" id="chatLog">
+        <div class="empty-state" id="emptyState">Ask a question about your documents to get started.</div>
+      </div>
+
+      <form class="composer" id="composer">
+        <textarea id="questionInput" rows="1" placeholder="Ask a question&hellip;" autocomplete="off"></textarea>
+        <button type="submit" id="sendButton">Send</button>
+      </form>
+    </main>
+  </div>
+
+  <footer class="app-footer">
+    <span id="footerStats"></span>
+  </footer>
+
+  <noscript>This app needs JavaScript enabled to talk to the LocalRAG server.</noscript>
+
+<script>
+(function () {
+  "use strict";
+
+  var HEALTH_POLL_MS = 15000;
+  var DELETE_CONFIRM_MS = 3000;
+  var DEGRADED_MESSAGE = "Ollama is unreachable — answers are unavailable until it's back";
+
+  var chatLog = document.getElementById("chatLog");
+  var emptyState = document.getElementById("emptyState");
+  var composer = document.getElementById("composer");
+  var questionInput = document.getElementById("questionInput");
+  var sendButton = document.getElementById("sendButton");
+  var footerStats = document.getElementById("footerStats");
+
+  var healthDot = document.getElementById("healthDot");
+  var healthLabel = document.getElementById("healthLabel");
+
+  var banner = document.getElementById("banner");
+  var bannerText = document.getElementById("bannerText");
+  var bannerDismiss = document.getElementById("bannerDismiss");
+
+  var uploadZone = document.getElementById("uploadZone");
+  var fileInput = document.getElementById("fileInput");
+  var uploadError = document.getElementById("uploadError");
+
+  var docList = document.getElementById("docList");
+  var docCount = document.getElementById("docCount");
+
+  var streaming = false;
+  var currentModel = "";
+  var previousHealthOk = true;
+  var healthEpisodeDismissed = false;
+  var confirmingDeleteButton = null;
+  var confirmingTimeoutId = null;
+
+  // ---------- banner ----------
+
+  function showBanner(message) {
+    bannerText.textContent = message;
+    banner.hidden = false;
+  }
+
+  function dismissBanner() {
+    banner.hidden = true;
+    healthEpisodeDismissed = true;
+  }
+
+  bannerDismiss.addEventListener("click", dismissBanner);
+
+  // ---------- health ----------
+
+  function setHealthIndicator(ok, model) {
+    healthDot.classList.toggle("is-ok", ok);
+    healthDot.classList.toggle("is-bad", !ok);
+    if (model) {
+      currentModel = model;
+    }
+    healthLabel.textContent = ok ? (currentModel || "ready") : "degraded";
+  }
+
+  function handleHealthPayload(data) {
+    var ok = !!data && data.status === "ok";
+    setHealthIndicator(ok, data && data.model);
+
+    if (!ok) {
+      if (previousHealthOk) {
+        healthEpisodeDismissed = false;
+      }
+      if (!healthEpisodeDismissed) {
+        showBanner(DEGRADED_MESSAGE);
+      }
+    }
+    previousHealthOk = ok;
+  }
+
+  function pollHealth() {
+    fetch("/api/health")
+      .then(function (res) { return res.json(); })
+      .then(handleHealthPayload)
+      .catch(function () {
+        handleHealthPayload({ status: "degraded" });
+      });
+  }
+
+  // ---------- uploads ----------
+
+  function showUploadError(message) {
+    uploadError.textContent = message;
+    uploadError.hidden = false;
+  }
+
+  function hideUploadError() {
+    uploadError.hidden = true;
+    uploadError.textContent = "";
+  }
+
+  function uploadFiles(fileList) {
+    hideUploadError();
+    var formData = new FormData();
+    for (var i = 0; i < fileList.length; i++) {
+      formData.append("files", fileList[i]);
+    }
+
+    fetch("/api/ingest", { method: "POST", body: formData })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().catch(function () { return {}; }).then(function (body) {
+            throw new Error(body.detail || ("Upload failed (" + res.status + ")"));
+          });
+        }
+        return refreshDocs();
+      })
+      .catch(function (err) {
+        showUploadError(err.message || "Upload failed");
+      });
+  }
+
+  uploadZone.addEventListener("click", function () { fileInput.click(); });
+  uploadZone.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+
+  ["dragover", "dragenter"].forEach(function (evtName) {
+    uploadZone.addEventListener(evtName, function (e) {
+      e.preventDefault();
+      uploadZone.classList.add("is-active");
+    });
+  });
+  ["dragleave", "drop"].forEach(function (evtName) {
+    uploadZone.addEventListener(evtName, function (e) {
+      e.preventDefault();
+      uploadZone.classList.remove("is-active");
+    });
+  });
+  uploadZone.addEventListener("drop", function (e) {
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      uploadFiles(e.dataTransfer.files);
+    }
+  });
+
+  fileInput.addEventListener("change", function () {
+    if (fileInput.files && fileInput.files.length) {
+      uploadFiles(fileInput.files);
+    }
+    fileInput.value = "";
+  });
+
+  // ---------- doc list ----------
+
+  function pluralize(n, word) {
+    return n + " " + word + (n === 1 ? "" : "s");
+  }
+
+  function resetDeleteButton(button) {
+    button.textContent = "×";
+    button.classList.remove("is-confirming");
+    if (confirmingDeleteButton === button) {
+      confirmingDeleteButton = null;
+    }
+  }
+
+  function handleDeleteClick(button, docId) {
+    if (confirmingDeleteButton === button) {
+      window.clearTimeout(confirmingTimeoutId);
+      confirmingDeleteButton = null;
+      performDelete(docId);
+      return;
+    }
+    if (confirmingDeleteButton) {
+      resetDeleteButton(confirmingDeleteButton);
+    }
+    confirmingDeleteButton = button;
+    button.textContent = "sure?";
+    button.classList.add("is-confirming");
+    confirmingTimeoutId = window.setTimeout(function () {
+      resetDeleteButton(button);
+    }, DELETE_CONFIRM_MS);
+  }
+
+  function performDelete(docId) {
+    fetch("/api/docs/" + encodeURIComponent(docId), { method: "DELETE" })
+      .then(function (res) {
+        if (res.ok || res.status === 404) {
+          return refreshDocs();
+        }
+        throw new Error("Delete failed (" + res.status + ")");
+      })
+      .catch(function (err) {
+        showUploadError(err.message || "Delete failed");
+      });
+  }
+
+  function renderDocItem(doc) {
+    var li = document.createElement("li");
+    li.className = "doc-item";
+
+    var info = document.createElement("div");
+    info.className = "doc-info";
+
+    var name = document.createElement("span");
+    name.className = "doc-name";
+    name.textContent = doc.filename;
+    name.title = doc.filename;
+
+    var meta = document.createElement("span");
+    meta.className = "doc-meta";
+    meta.textContent = pluralize(doc.pages, "page") + " · " + pluralize(doc.chunks, "chunk");
+
+    info.appendChild(name);
+    info.appendChild(meta);
+
+    var del = document.createElement("button");
+    del.type = "button";
+    del.className = "doc-delete";
+    del.textContent = "×";
+    del.title = "Delete document";
+    del.setAttribute("aria-label", "Delete " + doc.filename);
+    del.addEventListener("click", function () { handleDeleteClick(del, doc.doc_id); });
+
+    li.appendChild(info);
+    li.appendChild(del);
+    return li;
+  }
+
+  function renderDocs(docs) {
+    confirmingDeleteButton = null;
+    docList.textContent = "";
+    docCount.textContent = docs.length ? String(docs.length) : "";
+
+    if (!docs.length) {
+      var empty = document.createElement("li");
+      empty.className = "doc-empty";
+      empty.textContent = "No documents yet";
+      docList.appendChild(empty);
+      return;
+    }
+
+    for (var i = 0; i < docs.length; i++) {
+      docList.appendChild(renderDocItem(docs[i]));
+    }
+  }
+
+  function refreshDocs() {
+    return fetch("/api/docs")
+      .then(function (res) { return res.json(); })
+      .then(function (data) { renderDocs(data.documents || []); });
+  }
+
+  // ---------- chat ----------
+
+  function scrollChatToBottom() {
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  function hideEmptyState() {
+    if (emptyState) {
+      emptyState.hidden = true;
+    }
+  }
+
+  function appendUserMessage(text) {
+    var wrap = document.createElement("div");
+    wrap.className = "msg msg-user";
+    var bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    chatLog.appendChild(wrap);
+    scrollChatToBottom();
+  }
+
+  function appendAnswerMessage() {
+    var wrap = document.createElement("div");
+    wrap.className = "msg msg-answer";
+
+    var bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    wrap.appendChild(bubble);
+
+    var citations = document.createElement("div");
+    citations.className = "citations";
+    wrap.appendChild(citations);
+
+    chatLog.appendChild(wrap);
+    scrollChatToBottom();
+    return { wrap: wrap, bubble: bubble, citations: citations };
+  }
+
+  function renderCitations(container, citationList) {
+    container.textContent = "";
+    for (var i = 0; i < citationList.length; i++) {
+      var c = citationList[i];
+      var chip = document.createElement("span");
+      chip.className = "citation-chip";
+      chip.textContent = c.doc + " · p." + c.page;
+      chip.title = "score: " + c.score;
+      container.appendChild(chip);
+    }
+  }
+
+  function showInlineError(answerEls, message) {
+    var note = document.createElement("div");
+    note.className = "inline-error";
+    note.textContent = message;
+    answerEls.wrap.appendChild(note);
+    scrollChatToBottom();
+  }
+
+  function setStreaming(active) {
+    streaming = active;
+    sendButton.disabled = active;
+    questionInput.disabled = active;
+  }
+
+  function updateFooter(ms) {
+    footerStats.textContent = "first token: " + ms + "ms · model: " + (currentModel || "unknown");
+  }
+
+  function autoResizeInput() {
+    questionInput.style.height = "auto";
+    questionInput.style.height = questionInput.scrollHeight + "px";
+  }
+
+  function parseSseBlock(block) {
+    var eventName = null;
+    var dataRaw = null;
+    var lines = block.split("\n");
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      if (line.indexOf("event:") === 0) {
+        eventName = line.slice(6).trim();
+      } else if (line.indexOf("data:") === 0) {
+        dataRaw = line.slice(5).trim();
+      }
+    }
+    if (eventName === null || dataRaw === null) {
+      return null;
+    }
+    try {
+      return { event: eventName, data: JSON.parse(dataRaw) };
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function submitQuestion() {
+    var question = questionInput.value.trim();
+    if (!question || streaming) {
+      return;
+    }
+
+    hideEmptyState();
+    appendUserMessage(question);
+    questionInput.value = "";
+    autoResizeInput();
+
+    var answerEls = appendAnswerMessage();
+    setStreaming(true);
+
+    var startTime = performance.now();
+    var firstTokenSeen = false;
+    var answerText = "";
+
+    fetch("/api/query", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: question })
+    }).then(function (res) {
+      if (!res.ok || !res.body) {
+        return res.json().catch(function () { return {}; }).then(function (body) {
+          showInlineError(answerEls, body.detail || ("Request failed (" + res.status + ")"));
+          showBanner(DEGRADED_MESSAGE);
+          setStreaming(false);
+        });
+      }
+
+      var reader = res.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = "";
+
+      function pump() {
+        return reader.read().then(function (result) {
+          if (result.done) {
+            setStreaming(false);
+            return;
+          }
+          buffer += decoder.decode(result.value, { stream: true });
+
+          var separatorIndex;
+          while ((separatorIndex = buffer.indexOf("\n\n")) !== -1) {
+            var rawEvent = buffer.slice(0, separatorIndex);
+            buffer = buffer.slice(separatorIndex + 2);
+            var parsed = parseSseBlock(rawEvent);
+            if (!parsed) {
+              continue;
+            }
+
+            if (parsed.event === "token") {
+              if (!firstTokenSeen) {
+                firstTokenSeen = true;
+                updateFooter(Math.round(performance.now() - startTime));
+              }
+              answerText += parsed.data.text;
+              answerEls.bubble.textContent = answerText;
+              scrollChatToBottom();
+            } else if (parsed.event === "citations") {
+              renderCitations(answerEls.citations, parsed.data);
+            } else if (parsed.event === "error") {
+              showInlineError(answerEls, (parsed.data && parsed.data.message) || "Something went wrong");
+              showBanner(DEGRADED_MESSAGE);
+            }
+          }
+
+          return pump();
+        });
+      }
+
+      return pump();
+    }).catch(function () {
+      showInlineError(answerEls, "Connection lost while streaming the answer");
+      showBanner(DEGRADED_MESSAGE);
+      setStreaming(false);
+    });
+  }
+
+  composer.addEventListener("submit", function (e) {
+    e.preventDefault();
+    submitQuestion();
+  });
+
+  questionInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submitQuestion();
+    }
+  });
+
+  questionInput.addEventListener("input", autoResizeInput);
+
+  // ---------- boot ----------
+
+  pollHealth();
+  window.setInterval(pollHealth, HEALTH_POLL_MS);
+  refreshDocs();
+})();
+</script>
+</body>
+</html>

@@ -280,3 +280,12 @@ def test_dedupe_citations_keeps_highest_score_per_doc_and_page() -> None:
     assert page_one["snippet"] == "high score chunk text here"
     assert citations[0]["page"] == 1
     assert citations[1]["page"] == 2
+
+
+async def test_root_serves_packaged_index_html(client: httpx.AsyncClient) -> None:
+    resp = await client.get("/")
+
+    assert resp.status_code == 200
+    assert resp.headers["content-type"].startswith("text/html")
+    assert "LocalRAG" in resp.text
+    assert "/api/query" in resp.text
