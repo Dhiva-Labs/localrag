@@ -2,6 +2,15 @@
 
 import hashlib
 import math
+from collections.abc import AsyncIterator
+from pathlib import Path
+
+import httpx
+import pytest
+from httpx import ASGITransport
+
+from localrag.config import Settings
+from localrag.server import create_app
 
 _EMBED_DIMS = 64
 
@@ -30,3 +39,42 @@ class FakeEmbedder:
 
     def count_tokens(self, text: str) -> int:
         return len(text.split())
+
+
+class FakeOllama:
+    """Canned stand-in for OllamaClient: no HTTP, no subprocess, always up."""
+
+    def __init__(self, tokens: list[str] | None = None) -> None:
+        self.tokens = tokens if tokens is not None else ["This ", "is ", "a ", "fake ", "answer."]
+
+    async def is_up(self) -> bool:
+        return True
+
+    async def stream_generate(self, prompt: str) -> AsyncIterator[str]:
+        for token in self.tokens:
+            yield token
+
+
+def make_test_settings(data_dir: Path) -> Settings:
+    return Settings(
+        host="127.0.0.1",
+        port=8090,
+        data_dir=data_dir,
+        ollama_url="http://localhost:11434",
+        model="test-model",
+        embed_model="test-embed-model",
+        top_k=5,
+        score_threshold=0.30,
+        chunk_tokens=500,
+        chunk_overlap=50,
+    )
+
+
+@pytest.fixture
+async def client(tmp_path: Path) -> AsyncIterator[httpx.AsyncClient]:
+    """An httpx client wired to a full app: tmp data_dir, fake embedder/ollama."""
+    app = create_app(make_test_settings(tmp_path), embedder=FakeEmbedder(), ollama=FakeOllama())
+    async with app.router.lifespan_context(app):
+        transport = ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
+            yield ac
