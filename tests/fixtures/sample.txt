@@ -1,0 +1,8 @@
+Wind turbines convert kinetic energy from moving air into electricity through
+rotating blades connected to a generator.
+
+Modern turbine blades are engineered from fiberglass and carbon fiber
+composites to balance strength against weight.
+
+Routine maintenance includes inspecting the gearbox, checking blade pitch
+controls, and lubricating the yaw bearing.
