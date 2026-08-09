@@ -1,0 +1,22 @@
+services:
+  ollama:
+    image: ollama/ollama
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+
+  localrag:
+    build: .
+    ports:
+      - "8090:8090"
+    environment:
+      - LOCALRAG_OLLAMA_URL=http://ollama:11434
+    volumes:
+      - localrag-data:/data
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  ollama:
+  localrag-data:
