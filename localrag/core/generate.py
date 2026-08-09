@@ -9,6 +9,11 @@ from localrag.core.store import RetrievedChunk
 
 REFUSAL = "I don't know based on the indexed documents."
 
+# a cold model load in Ollama can take much longer than the 5s httpx default
+# before the first token arrives, so only the connect phase stays bounded --
+# the read side waits as long as Ollama takes and ends when it sends done.
+_STREAM_TIMEOUT = httpx.Timeout(5.0, read=None)
+
 _INSTRUCTIONS = (
     "Answer the question using only the information in the context below. "
     f'If the answer is not present in the context, reply with exactly: "{REFUSAL}" '
@@ -37,6 +42,9 @@ class OllamaClient:
         self.model = model
         self._transport = transport
 
+    def _stream_client(self) -> httpx.AsyncClient:
+        return httpx.AsyncClient(transport=self._transport, timeout=_STREAM_TIMEOUT)
+
     async def stream_generate(self, prompt: str) -> AsyncIterator[str]:
         payload = {
             "model": self.model,
@@ -46,7 +54,7 @@ class OllamaClient:
         }
         try:
             async with (
-                httpx.AsyncClient(transport=self._transport) as client,
+                self._stream_client() as client,
                 client.stream("POST", f"{self.base_url}/api/generate", json=payload) as response,
             ):
                 async for line in response.aiter_lines():

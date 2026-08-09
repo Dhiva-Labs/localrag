@@ -11,6 +11,7 @@ from fastapi import FastAPI
 
 from localrag.config import Settings
 from localrag.core.embedder import Embedder
+from localrag.core.generate import OllamaClient
 from localrag.core.store import Store
 
 
@@ -39,9 +40,6 @@ def create_app(
 
         active_ollama = ollama
         if active_ollama is None:
-            # deferred: keeps this module importable before core/generate.py exists
-            from localrag.core.generate import OllamaClient
-
             active_ollama = OllamaClient(resolved_settings.ollama_url, resolved_settings.model)
 
         app.state.deps = Deps(
@@ -55,8 +53,10 @@ def create_app(
     app = FastAPI(lifespan=lifespan)
 
     from localrag.api.ingest import router as ingest_router
+    from localrag.api.query import router as query_router
 
     app.include_router(ingest_router)
+    app.include_router(query_router)
 
     @app.get("/api/health")
     async def health() -> dict[str, Any]:

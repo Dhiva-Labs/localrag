@@ -103,3 +103,11 @@ async def test_stream_generate_raises_ollama_unavailable_on_connect_error() -> N
     with pytest.raises(OllamaUnavailable):
         async for _ in client.stream_generate("hello"):
             pass
+
+
+async def test_stream_generate_client_has_unbounded_read_timeout() -> None:
+    client = OllamaClient("http://localhost:11434", "test-model")
+
+    async with client._stream_client() as http_client:
+        assert http_client.timeout.read is None
+        assert http_client.timeout.connect == 5.0
