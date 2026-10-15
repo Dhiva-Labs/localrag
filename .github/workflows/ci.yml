@@ -2,14 +2,29 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: test (${{ matrix.arch }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
         python-version: ["3.10", "3.12"]
+        include:
+          - os: ubuntu-24.04
+            arch: x64
+            machine: x86_64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            machine: aarch64
     env:
       HF_HUB_OFFLINE: "1"
     steps:
@@ -21,8 +36,31 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
+      - name: Assert the interpreter matches the runner architecture
+        run: |
+          python -c "import platform; print(platform.machine())"
+          test "$(python -c 'import platform; print(platform.machine())')" = "${{ matrix.machine }}"
+
+      # same index the Dockerfile uses; it publishes wheels for x86_64 and aarch64
+      - name: Install CPU-only torch
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+
       - name: Install dependencies
         run: pip install -e ".[dev]"
+
+      - name: Check the torch build
+        run: |
+          python - <<'EOF'
+          import platform
+
+          import torch
+
+          print("machine:", platform.machine())
+          print("torch:", torch.__version__, "cuda:", torch.version.cuda)
+          assert platform.machine() == "${{ matrix.machine }}"
+          assert torch.version.cuda is None, "expected a CPU-only torch build"
+          print(torch.ones(2, 2).sum())
+          EOF
 
       - name: Lint
         run: ruff check .
@@ -32,3 +70,161 @@ jobs:
 
       - name: Test
         run: pytest -q
+
+  docker:
+    name: docker image and compose stack (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: linux/amd64
+            machine: x86_64
+            elf-machine: "62"
+          - os: ubuntu-24.04-arm
+            platform: linux/arm64
+            machine: aarch64
+            elf-machine: "183"
+    env:
+      COMPOSE_PROJECT_NAME: localrag
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # check only: the image is loaded into the runner's local daemon, never pushed
+      - name: Build the image for ${{ matrix.platform }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          push: false
+          load: true
+          provenance: false
+          tags: localrag-localrag:latest
+          cache-from: type=gha,scope=docker-${{ matrix.machine }}
+          cache-to: type=gha,mode=max,scope=docker-${{ matrix.machine }}
+
+      - name: Verify the image architecture and the CPU-only torch inside it
+        run: |
+          arch="$(docker image inspect localrag-localrag:latest --format '{{.Os}}/{{.Architecture}}')"
+          echo "image platform: $arch"
+          test "$arch" = "${{ matrix.platform }}"
+          docker run --rm -i \
+            -e EXPECT_MACHINE="${{ matrix.machine }}" \
+            -e EXPECT_ELF_MACHINE="${{ matrix.elf-machine }}" \
+            --entrypoint python localrag-localrag:latest - <<'EOF'
+          import os
+          import platform
+          import struct
+          import sysconfig
+          from importlib import metadata
+
+          import chromadb  # noqa: F401
+          import sentence_transformers  # noqa: F401
+          import torch
+
+          expect_machine = os.environ["EXPECT_MACHINE"]
+          expect_elf = int(os.environ["EXPECT_ELF_MACHINE"])
+
+          print("machine:", platform.machine())
+          print("torch cuda:", torch.version.cuda)
+          for name in ("torch", "chromadb", "chroma-hnswlib", "onnxruntime", "numpy",
+                       "tokenizers", "sentence-transformers", "pydantic-core", "uvicorn"):
+              try:
+                  print(f"  {name} {metadata.version(name)}")
+              except metadata.PackageNotFoundError:
+                  print(f"  {name} (not installed)")
+          assert platform.machine() == expect_machine
+          assert torch.version.cuda is None, "expected a CPU-only torch build"
+
+          # every compiled library in site-packages must be built for this architecture
+          site = sysconfig.get_paths()["purelib"]
+          checked, wrong = 0, []
+          for root, _dirs, files in os.walk(site):
+              for fname in files:
+                  if not (fname.endswith(".so") or ".so." in fname):
+                      continue
+                  path = os.path.join(root, fname)
+                  if os.path.islink(path):
+                      continue
+                  with open(path, "rb") as f:
+                      header = f.read(20)
+                  if header[:4] != b"\x7fELF":
+                      continue
+                  checked += 1
+                  if struct.unpack("<H", header[18:20])[0] != expect_elf:
+                      wrong.append(path)
+          print(f"checked {checked} shared libraries under {site}")
+          assert checked > 50
+          assert not wrong, f"libraries built for another architecture: {wrong[:10]}"
+          EOF
+
+      - name: Start the compose stack (localrag and ollama)
+        run: |
+          # the base file is used as is; this override only selects a small model
+          cat > "$RUNNER_TEMP/compose.ci.yml" <<'EOF'
+          services:
+            localrag:
+              environment:
+                - LOCALRAG_MODEL=qwen2.5:0.5b
+          EOF
+          echo "COMPOSE_FILE=docker-compose.yml:$RUNNER_TEMP/compose.ci.yml" >> "$GITHUB_ENV"
+          export COMPOSE_FILE="docker-compose.yml:$RUNNER_TEMP/compose.ci.yml"
+          # the ollama image must be published for this platform
+          docker buildx imagetools inspect ollama/ollama | tee ollama-manifest.txt
+          grep -E "^ *Platform: +${{ matrix.platform }}$" ollama-manifest.txt
+          # use the image built above instead of building a second time
+          docker compose config --images | tee images.txt
+          grep -qx localrag-localrag images.txt
+          docker compose up -d --no-build
+          docker compose ps
+
+      - name: Wait for the stack to report healthy
+        run: |
+          for i in $(seq 1 90); do
+            if curl -fsS http://localhost:8090/api/health -o health.json 2>/dev/null \
+               && jq -e '.status == "ok"' health.json >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          cat health.json
+          jq -e '.status == "ok" and .chroma == true and .ollama == true' health.json
+
+      - name: Pull a tiny generation model into ollama
+        run: docker compose exec -T ollama ollama pull qwen2.5:0.5b
+
+      - name: Ingest a document and ask a question end to end
+        run: |
+          # the first ingest downloads the embedding model inside the container
+          cat > "$RUNNER_TEMP/wind.md" <<'EOF'
+          # Wind turbines
+
+          Wind turbines convert the kinetic energy of moving air into electricity.
+          A turbine has three blades attached to a rotor. When the wind turns the
+          rotor, a generator in the nacelle produces power. Offshore wind farms
+          usually produce more energy than onshore ones because the wind is steadier.
+          EOF
+          curl -fsS --max-time 900 -F "files=@$RUNNER_TEMP/wind.md" \
+            http://localhost:8090/api/ingest | tee ingest.json
+          jq -e '.documents[0].chunks >= 1 and .documents[0].deduped == false' ingest.json
+          curl -fsS http://localhost:8090/api/docs | jq -e '.documents | length == 1'
+
+          curl -fsS --max-time 600 -N -H 'Content-Type: application/json' \
+            -d '{"question": "How does a wind turbine produce electricity?"}' \
+            http://localhost:8090/api/query | tee query.txt
+          grep -q '^event: token' query.txt
+          grep -q '^event: citations' query.txt
+          grep -q '"doc": "wind.md"' query.txt
+          grep -q '^event: done' query.txt
+          if grep -q '^event: error' query.txt; then echo "stream reported an error"; exit 1; fi
+
+      - name: Show container logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail=200
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v --remove-orphans

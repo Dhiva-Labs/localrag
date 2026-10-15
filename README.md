@@ -2,7 +2,9 @@
 
 Fully offline, self-hosted RAG server — documents in, cited answers out. No API keys, no cloud.
 
-[![CI](https://github.com/Dhiva-Labs/localrag/actions/workflows/ci.yml/badge.svg)](https://github.com/Dhiva-Labs/localrag/actions/workflows/ci.yml)
+[![ARM64 builds](https://github.com/Dhiva-Labs/localrag/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Dhiva-Labs/localrag/actions/workflows/ci.yml)
+![Linux x64 | arm64](https://img.shields.io/badge/Linux-x64%20%7C%20arm64-informational?logo=linux&logoColor=white)
+![Docker amd64 | arm64](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-informational?logo=docker&logoColor=white)
 
 ## Features
 
@@ -79,6 +81,28 @@ Open http://localhost:8090.
 Documents, the vector store, and the downloaded embedding model live in the
 `localrag-data` named volume; pulled Ollama models live in the `ollama`
 named volume. Both persist across `docker compose down` (but not `down -v`).
+
+### Platforms: Linux x64 and arm64
+
+LocalRAG runs on x86-64 and arm64 (aarch64) Linux, with Docker or with pip.
+
+- **Docker**: `docker compose up --build` builds the image for the host's
+  architecture. The CPU-only PyTorch wheels come from
+  `https://download.pytorch.org/whl/cpu`, which publishes both `x86_64` and
+  `aarch64` builds, and every other dependency installs from a prebuilt wheel,
+  so no compiler is involved. The `ollama/ollama` image used by the compose
+  file is published for both architectures too. Nothing is pushed to a
+  registry; you build the image on the machine that runs it.
+- **pip**: the same command works on both. To avoid pulling CUDA libraries on
+  x86-64, install the CPU-only torch first:
+  `pip install torch --index-url https://download.pytorch.org/whl/cpu`, then
+  `pip install .`.
+- **CI** runs the test suite on Ubuntu 24.04 (x64) and Ubuntu 24.04 arm64
+  (Python 3.10 and 3.12), and on each of those runners builds the Docker image
+  natively as a check, verifies that torch is the CPU-only build and that every
+  compiled library in the image targets the runner's architecture, starts the
+  compose stack, ingests a document, and gets a streamed, cited answer from a
+  small Ollama model (`qwen2.5:0.5b`). The images are discarded after the run.
 
 ## CLI
 
