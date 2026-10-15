@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- CI runs the tests on Linux x64 and Linux arm64, builds the Docker image natively
+  for linux/amd64 and linux/arm64 (check only, nothing is pushed), and runs an
+  end-to-end ingest and query against the compose stack on both
+- README documents Linux arm64 support
+
 ## 0.1.0 — 2026-08-10
 
 Initial release.
