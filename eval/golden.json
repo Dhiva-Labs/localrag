@@ -1,0 +1,321 @@
+[
+ {
+  "id": "a01",
+  "question": "How much is an adult single ticket on the ferry?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 1
+ },
+ {
+  "id": "a02",
+  "question": "What does a ten-trip ferry pass cost and when does it expire?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 1
+ },
+ {
+  "id": "a03",
+  "question": "Do infants pay to travel on the ferry?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 1
+ },
+ {
+  "id": "a04",
+  "question": "How much extra do tickets cost when bought on board?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 1
+ },
+ {
+  "id": "a05",
+  "question": "What time does the first ferry leave Pennick Quay?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 2
+ },
+ {
+  "id": "a06",
+  "question": "How long is the crossing to Grey Island?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 2
+ },
+ {
+  "id": "a07",
+  "question": "How often do ferries sail in summer?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 2
+ },
+ {
+  "id": "a08",
+  "question": "Is there a ferry on Christmas Day?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 2
+ },
+ {
+  "id": "a09",
+  "question": "How much does it cost to take a car on the ferry?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 3
+ },
+ {
+  "id": "a10",
+  "question": "Can I bring my bicycle on the ferry, and does it cost anything?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 3
+ },
+ {
+  "id": "a11",
+  "question": "What is the free luggage allowance per passenger?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 3
+ },
+ {
+  "id": "a12",
+  "question": "Where may assistance animals sit on the ferry?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 3
+ },
+ {
+  "id": "a13",
+  "question": "In what wind conditions are sailings cancelled?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 4
+ },
+ {
+  "id": "a14",
+  "question": "How long do ferry refunds take?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 4
+ },
+ {
+  "id": "a15",
+  "question": "Where are the lifejackets kept?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 4
+ },
+ {
+  "id": "a16",
+  "question": "How many passengers can the MV Cormorant carry?",
+  "answerable": true,
+  "doc": "harbor_light_ferry.pdf",
+  "page": 4
+ },
+ {
+  "id": "a17",
+  "question": "How much is the yearly plot fee at the community garden?",
+  "answerable": true,
+  "doc": "orchard_street_garden.pdf",
+  "page": 1
+ },
+ {
+  "id": "a18",
+  "question": "How big is each garden plot?",
+  "answerable": true,
+  "doc": "orchard_street_garden.pdf",
+  "page": 1
+ },
+ {
+  "id": "a19",
+  "question": "How many volunteer hours must garden members do each year?",
+  "answerable": true,
+  "doc": "orchard_street_garden.pdf",
+  "page": 1
+ },
+ {
+  "id": "a20",
+  "question": "What hours is gardening allowed in the garden?",
+  "answerable": true,
+  "doc": "orchard_street_garden.pdf",
+  "page": 2
+ },
+ {
+  "id": "a21",
+  "question": "Are chemical pesticides allowed at the garden?",
+  "answerable": true,
+  "doc": "orchard_street_garden.pdf",
+  "page": 2
+ },
+ {
+  "id": "a22",
+  "question": "Where does the garden get its water?",
+  "answerable": true,
+  "doc": "orchard_street_garden.pdf",
+  "page": 2
+ },
+ {
+  "id": "a23",
+  "question": "When is the garden tool shed unlocked?",
+  "answerable": true,
+  "doc": "orchard_street_garden.pdf",
+  "page": 3
+ },
+ {
+  "id": "a24",
+  "question": "Who looks after the garden beehives?",
+  "answerable": true,
+  "doc": "orchard_street_garden.pdf",
+  "page": 3
+ },
+ {
+  "id": "a25",
+  "question": "How often are the compost bins emptied?",
+  "answerable": true,
+  "doc": "orchard_street_garden.pdf",
+  "page": 3
+ },
+ {
+  "id": "a26",
+  "question": "How often does the Vela-7 take a reading by default?",
+  "answerable": true,
+  "doc": "vela7_weather_station.pdf",
+  "page": 1
+ },
+ {
+  "id": "a27",
+  "question": "What powers the Vela-7 weather station?",
+  "answerable": true,
+  "doc": "vela7_weather_station.pdf",
+  "page": 1
+ },
+ {
+  "id": "a28",
+  "question": "How high should the Vela-7 mast be mounted?",
+  "answerable": true,
+  "doc": "vela7_weather_station.pdf",
+  "page": 2
+ },
+ {
+  "id": "a29",
+  "question": "How many guy wires secure the Vela-7 mast?",
+  "answerable": true,
+  "doc": "vela7_weather_station.pdf",
+  "page": 2
+ },
+ {
+  "id": "a30",
+  "question": "How often should the Vela-7 temperature sensor be calibrated?",
+  "answerable": true,
+  "doc": "vela7_weather_station.pdf",
+  "page": 3
+ },
+ {
+  "id": "a31",
+  "question": "How much rain does one tip of the rain gauge measure?",
+  "answerable": true,
+  "doc": "vela7_weather_station.pdf",
+  "page": 3
+ },
+ {
+  "id": "a32",
+  "question": "What does a blinking red LED mean on the weather station?",
+  "answerable": true,
+  "doc": "vela7_weather_station.pdf",
+  "page": 4
+ },
+ {
+  "id": "a33",
+  "question": "How do I reset the Vela-7?",
+  "answerable": true,
+  "doc": "vela7_weather_station.pdf",
+  "page": 4
+ },
+ {
+  "id": "a34",
+  "question": "What size microSD card does the Vela-7 support?",
+  "answerable": true,
+  "doc": "vela7_weather_station.pdf",
+  "page": 4
+ },
+ {
+  "id": "a35",
+  "question": "How much water goes into the sourdough loaf?",
+  "answerable": true,
+  "doc": "kestrel_bakery_recipes.md",
+  "page": 1
+ },
+ {
+  "id": "a36",
+  "question": "At what temperature are the ginger biscuits baked?",
+  "answerable": true,
+  "doc": "kestrel_bakery_recipes.md",
+  "page": 1
+ },
+ {
+  "id": "a37",
+  "question": "How long do the oat flapjacks bake?",
+  "answerable": true,
+  "doc": "kestrel_bakery_recipes.md",
+  "page": 1
+ },
+ {
+  "id": "u01",
+  "question": "Does the ferry have onboard wifi?",
+  "answerable": false,
+  "kind": "near_miss"
+ },
+ {
+  "id": "u02",
+  "question": "How much fuel does the MV Cormorant burn per crossing?",
+  "answerable": false,
+  "kind": "near_miss"
+ },
+ {
+  "id": "u03",
+  "question": "Are chickens allowed at the community garden?",
+  "answerable": false,
+  "kind": "near_miss"
+ },
+ {
+  "id": "u04",
+  "question": "What is the wireless range of the Vela-7?",
+  "answerable": false,
+  "kind": "near_miss"
+ },
+ {
+  "id": "u05",
+  "question": "How much does the Vela-7 weigh?",
+  "answerable": false,
+  "kind": "near_miss"
+ },
+ {
+  "id": "u06",
+  "question": "How long does sourdough starter take to make from scratch?",
+  "answerable": false,
+  "kind": "near_miss"
+ },
+ {
+  "id": "u07",
+  "question": "Who is the president of France?",
+  "answerable": false,
+  "kind": "off_topic"
+ },
+ {
+  "id": "u08",
+  "question": "What is the capital of Australia?",
+  "answerable": false,
+  "kind": "off_topic"
+ },
+ {
+  "id": "u09",
+  "question": "How do I reset my home router?",
+  "answerable": false,
+  "kind": "off_topic"
+ },
+ {
+  "id": "u10",
+  "question": "Explain how a transformer neural network works.",
+  "answerable": false,
+  "kind": "off_topic"
+ }
+]

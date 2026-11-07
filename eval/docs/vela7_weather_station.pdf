@@ -1,0 +1,113 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R] /Count 4 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 11 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 301 >>
+stream
+BT
+/F1 16 Tf
+72 740 Td
+(Overview) Tj
+ET
+BT
+/F1 11 Tf
+14 TL
+72 700 Td
+(The Vela-7 weather station records temperature, humidity, air pressure and wind) Tj T*
+(speed. By default it takes one reading every 10 minutes. It is powered by a) Tj T*
+(20-watt solar panel that charges a 12 Ah battery.) Tj T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 11 0 R >> >> >>
+endobj
+6 0 obj
+<< /Length 300 >>
+stream
+BT
+/F1 16 Tf
+72 740 Td
+(Installation) Tj
+ET
+BT
+/F1 11 Tf
+14 TL
+72 700 Td
+(Mount the Vela-7 mast 2 metres above the ground. Keep the station at least 3) Tj T*
+(metres away from walls and trees. Secure the mast with four guy wires. Use the) Tj T*
+(built-in bubble indicator to level the unit.) Tj T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 8 0 R /Resources << /Font << /F1 11 0 R >> >> >>
+endobj
+8 0 obj
+<< /Length 336 >>
+stream
+BT
+/F1 16 Tf
+72 740 Td
+(Calibration) Tj
+ET
+BT
+/F1 11 Tf
+14 TL
+72 700 Td
+(Calibrate the temperature sensor every 12 months in an ice bath at 0 degrees) Tj T*
+(Celsius. The pressure sensor is calibrated at the factory and drifts by at most) Tj T*
+(0.5 hPa per year. The tipping-bucket rain gauge measures 0.2 mm of rain per tip.) Tj T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 10 0 R /Resources << /Font << /F1 11 0 R >> >> >>
+endobj
+10 0 obj
+<< /Length 336 >>
+stream
+BT
+/F1 16 Tf
+72 740 Td
+(Troubleshooting and data) Tj
+ET
+BT
+/F1 11 Tf
+14 TL
+72 700 Td
+(A blinking red LED means the battery is low. A steady blue LED means the station) Tj T*
+(is uploading data. Hold the reset button for 10 seconds to restart the unit.) Tj T*
+(Readings are stored as CSV files on a microSD card of up to 32 GB.) Tj T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000133 00000 n 
+0000000260 00000 n 
+0000000612 00000 n 
+0000000739 00000 n 
+0000001090 00000 n 
+0000001217 00000 n 
+0000001604 00000 n 
+0000001732 00000 n 
+0000002120 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+2191
+%%EOF

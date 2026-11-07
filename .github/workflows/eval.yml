@@ -1,0 +1,47 @@
+name: Eval
+
+# Manual only: downloads the embedding model and takes a few minutes, so it is not
+# part of normal CI. Ollama is not needed; retrieval and refusal use the embedder.
+on:
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: Refusal score threshold (blank = the 0.30 default)
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install CPU-only torch
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install dependencies
+        run: pip install -e .
+
+      - name: Run the eval
+        env:
+          THRESHOLD: ${{ inputs.threshold }}
+        run: |
+          args=()
+          if [ -n "$THRESHOLD" ]; then args+=(--threshold "$THRESHOLD"); fi
+          python eval/run_eval.py "${args[@]}" --json eval-results.json | tee eval-report.txt
+          { echo '```'; cat eval-report.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: |
+            eval-report.txt
+            eval-results.json
