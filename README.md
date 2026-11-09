@@ -2,6 +2,8 @@
 
 Fully offline, self-hosted RAG server — documents in, cited answers out. No API keys, no cloud.
 
+**Documentation:** step-by-step guides at [learn.dhivalabs.com](https://learn.dhivalabs.com/apps/localrag/): [install](https://learn.dhivalabs.com/apps/localrag/install) · [beginner guide](https://learn.dhivalabs.com/apps/localrag/getting-started) · [troubleshooting](https://learn.dhivalabs.com/apps/localrag/faq). New to the topic? Try the [AI and local models](https://learn.dhivalabs.com/tracks/ai/) learning track.
+
 [![ARM64 builds](https://github.com/Dhiva-Labs/localrag/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Dhiva-Labs/localrag/actions/workflows/ci.yml)
 ![Linux x64 | arm64](https://img.shields.io/badge/Linux-x64%20%7C%20arm64-informational?logo=linux&logoColor=white)
 ![Docker amd64 | arm64](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-informational?logo=docker&logoColor=white)
