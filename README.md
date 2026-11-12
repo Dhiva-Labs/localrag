@@ -22,6 +22,22 @@ Fully offline, self-hosted RAG server — documents in, cited answers out. No AP
 - CLI for headless and bulk ingestion
 - Docker Compose setup for a two-container deployment (LocalRAG + Ollama)
 
+## Engineering highlights
+
+- **Page-level citations.** Extraction keeps page numbers, and the chunker never lets a chunk cross a page boundary, so every citation names a document and page. Citations are deduplicated to the best score per document and page. See [`core/chunker.py`](localrag/core/chunker.py), [`api/query.py`](localrag/api/query.py), and the chunker tests in [`tests/test_chunker.py`](tests/test_chunker.py).
+- **Refusal when retrieval is weak.** If no chunk clears `LOCALRAG_SCORE_THRESHOLD`, the server answers with a fixed "I don't know" and never calls Ollama. This is tested by [`test_query_refusal_path_never_calls_ollama`](tests/test_api.py); the filter is in [`core/retriever.py`](localrag/core/retriever.py).
+- **SSE streaming with defined failure behaviour.** Tokens stream as they arrive, followed by one `citations` and one `done` event. If Ollama fails mid-stream, an `error` event is sent after the tokens already delivered ([`test_query_error_path_emits_error_then_done_after_partial_tokens`](tests/test_api.py)).
+- **Idempotent ingest.** Files are hashed by content; re-uploading the same bytes is a no-op, and a request with any bad file is rejected as a whole ([`api/ingest.py`](localrag/api/ingest.py), [`tests/test_api.py`](tests/test_api.py)).
+- **End-to-end check in CI.** [`ci.yml`](.github/workflows/ci.yml) builds the Docker image on Linux x64 and arm64, starts the Docker Compose stack, ingests a document, asks a question against a small Ollama model (`qwen2.5:0.5b`), and asserts the stream contains tokens, a citation to the ingested file, and `done` with no error.
+
+## Status and limits
+
+Version 0.1.0, a small reference build. The unit and API tests above use fakes for the embedder and Ollama; only the CI compose job exercises the real stack, and it checks that an answer is streamed and cited, not that it is correct.
+
+- **Answer quality and retrieval accuracy are not measured.** There is no evaluation set in this repo, so no accuracy, recall or latency figures are claimed. The default score threshold (0.30) is a starting value, not a tuned one.
+- No authentication on the API; bind it to localhost or put it behind your own proxy.
+- PDF support reads the embedded text layer only. No OCR, no Word documents.
+
 ## How it works
 
 ```
@@ -219,6 +235,17 @@ No, with one exception: the embedding model download the first time you
 ingest a document, and whatever `ollama pull` fetches for the generation
 model. Both are one-time and cached locally. After that, LocalRAG makes no
 outbound network calls — it's safe to run fully air-gapped.
+
+## Development
+
+```sh
+pip install torch --index-url https://download.pytorch.org/whl/cpu   # optional, avoids CUDA libraries
+pip install -e ".[dev]"
+ruff check . && ruff format --check .
+pytest -q
+```
+
+These are the same lint, format and test steps CI runs (see [`ci.yml`](.github/workflows/ci.yml)).
 
 ## Sponsors
 
